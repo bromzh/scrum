@@ -64,10 +64,38 @@
     </div>
 </script>
 
+<script type="text/ng-template" id="historyForm.html">
+    <div class="modal-header">
+        <h3 class="modal-title">Создание/редактирование истории</h3>
+    </div>
+    <div class="modal-body">
+        <form>
+            <div class="form-group">
+                <label class="control-label" for="">Имя</label>
+                <input class="form-control" type="text" ng-model="modal.history.name" required/>
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="">Приоритет</label>
+                <input class="form-control" type="number" ng-model="modal.history.priority" required/>
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="">Статус</label>
+                <select class="form-control"
+                        ng-model="modal.status"
+                        ng-options="item as item.name for item in modal.statuses track by item.id"></select>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="button" ng-click="modal.ok()">OK</button>
+        <button class="btn btn-warning" type="button" ng-click="modal.cancel()">Cancel</button>
+    </div>
+</script>
+
 <div class="container">
     <div class="row">
         <div class="col-md-12">
-            <a class="btn btn-success" href="">Добавить историю</a>
+            <a class="btn btn-success" href="" ng-click="vm.addHistory()">Добавить историю</a>
         </div>
         <hr/>
         <div class="col-md-12">

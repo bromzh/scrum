@@ -21,6 +21,9 @@
         var service = {};
 
         service.list = list;
+        service.create = create;
+        service.update = update;
+        service.delete = del;
 
         return service;
 
@@ -31,6 +34,24 @@
                 .then(function (response) {
                     return response.data.objects;
                 });
+        }
+
+        function create(history) {
+            return $http.post('/api/history', history)
+                .then(function (response) {
+                    return response.data;
+                });
+        }
+
+        function update(history) {
+            return $http.put('/api/history/' + history.id, history)
+                .then(function (response) {
+                    return response.data;
+                })
+        }
+
+        function del(history) {
+            return $http.delete('/api/history/' + history.id);
         }
     }
 
@@ -92,6 +113,32 @@
         }
     }
 
+    app.controller('HistoryModalController', HistoryModalController);
+    HistoryModalController.$inject = ['$uibModalInstance', 'history'];
+    function HistoryModalController($uibModalInstance, history) {
+        var vm = this;
+
+        vm.ok = ok;
+        vm.cancel = cancel;
+
+        vm.history = history;
+        vm.statuses = STATUSES;
+        vm.status = vm.statuses[vm.history.status];
+
+        ////////////////////
+
+        function ok() {
+            console.log('asd');
+            vm.history.status = vm.status.id;
+            $uibModalInstance.close(vm.history);
+        }
+
+        function cancel() {
+            console.log('asd');
+            $uibModalInstance.dismiss('cancel');
+        }
+    }
+
     app.controller('AppController', AppController);
     AppController.$inject = ['$uibModal', 'HistoryService', 'IssueService'];
     function AppController($uibModal, HistoryService, IssueService) {
@@ -102,6 +149,10 @@
         vm.addIssue = addIssue;
         vm.editIssue = editIssue;
         vm.deleteIssue = deleteIssue;
+
+        vm.addHistory = addHistory;
+        vm.editHistory = editHistory;
+        vm.deleteHistory = deleteHistory;
 
         vm.statuses = STATUSES;
 
@@ -152,6 +203,18 @@
             });
         }
 
+        function openHistoryModal(history) {
+            return $uibModal.open({
+                templateUrl: 'historyForm.html',
+                controller: HistoryModalController,
+                controllerAs: 'modal',
+                bindToController: true,
+                resolve: {
+                    history: history
+                }
+            });
+        }
+
         function addIssue(history) {
             openIssueModal({history: {id: history.id, name: history.name}, timing: 1, status: 3, priority: 0})
                 .result
@@ -179,6 +242,37 @@
 
         function deleteIssue(issue) {
             IssueService.delete(issue)
+                .then(function () {
+                    return getHistories();
+                });
+        }
+
+        function addHistory() {
+            openHistoryModal({status: 3, priority: 0})
+                .result
+                .then(function (history) {
+                    return HistoryService.create(history)
+                })
+                .then(function (issue) {
+                    console.log(issue);
+                    return getHistories();
+                });
+        }
+
+        function editHistory(history) {
+            openHistoryModal(history)
+                .result
+                .then(function (history) {
+                    return HistoryService.update(history);
+                })
+                .then(function (history) {
+                    console.log(history);
+                    return getHistories();
+                });
+        }
+
+        function deleteHistory(history) {
+            HistoryService.delete(history)
                 .then(function () {
                     return getHistories();
                 });
