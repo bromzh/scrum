@@ -146,6 +146,7 @@
 
         vm.onDragSuccess = onDragSuccess;
         vm.onDropSuccess = onDropSuccess;
+
         vm.addIssue = addIssue;
         vm.editIssue = editIssue;
         vm.deleteIssue = deleteIssue;
