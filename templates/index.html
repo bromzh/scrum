@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html ng-app="app">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Scrum</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/dist/css/bootstrap.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='angular-bootstrap/ui-bootstrap-csp.css') }}"/>
+
+    <style>
+        .issue {
+        {#            border: 1px dotted #666;#}
+        {#            padding: 10px;#}
+        {#            background: white;#}
+            cursor: move;
+            margin-bottom: 10px;
+        }
+
+        .dragging {
+            position: relative;
+        }
+
+    </style>
+
+    <script src="{{ url_for('static', filename='jquery/dist/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/dist/js/bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='angular/angular.js') }}"></script>
+    <script src="{{ url_for('static', filename='angular-bootstrap/ui-bootstrap-tpls.js') }}"></script>
+    <script src="{{ url_for('static', filename='ngDraggable/ngDraggable.js') }}"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body ng-controller="AppController as vm">
+
+<script type="text/ng-template" id="issueForm.html">
+    <div class="modal-header">
+        <h3 class="modal-title">Создание/редактирование задачи</h3>
+    </div>
+    <div class="modal-body">
+        <form>
+
+            <div class="form-group">
+                <label class="control-label" for="">Имя</label>
+                <input class="form-control" type="text" ng-model="modal.issue.name" required/>
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="">Время</label>
+                <input class="form-control" type="number" min="1" ng-model="modal.issue.timing" required/>
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="">Приоритет</label>
+                <input class="form-control" type="number" ng-model="modal.issue.priority" required/>
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="">Статус</label>
+                <select class="form-control"
+                        ng-model="modal.status"
+                        ng-options="item as item.name for item in modal.statuses track by item.id"></select>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="button" ng-click="modal.ok()">OK</button>
+        <button class="btn btn-warning" type="button" ng-click="modal.cancel()">Cancel</button>
+    </div>
+</script>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <a class="btn btn-success" href="">Добавить историю</a>
+        </div>
+        <hr/>
+        <div class="col-md-12">
+            <table class="table table-bordered">
+                <colgroup>
+                    <col style="width: 25%"/>
+                    <col style="width: 25%"/>
+                    <col style="width: 25%"/>
+                    <col style="width: 25%"/>
+                </colgroup>
+                <thead>
+                <tr>
+                    <th class="info">Запланировано</th>
+                    <th class="warning">Выполняется</th>
+                    <th class="success">Готово</th>
+                    <th class="danger">Не запланировано</th>
+                </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="col-md-12">
+            <div class="panel panel-default" ng-repeat="history in vm.histories">
+                <div class="panel-heading">
+                    <div class="col-md-3">
+                        <a class="btn btn-default btn-xs" ng-click="vm.collapsed[history.id] = !vm.collapsed[history.id]">
+                            <span class="glyphicon glyphicon-resize-vertical"></span>
+                        </a>
+                        <strong>{[ history.name ]}</strong>
+                    </div>
+                    <div class="col-md-3">
+                    <span>
+                        <span class="glyphicon glyphicon-warning-sign"></span> Приоритет: {[ history.priority ]}
+                    </span>
+                    <span class="pull-right">
+                        <span class="glyphicon glyphicon-hourglass"></span> Время: {[ history.timing ]}
+                    </span>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="glyphicon glyphicon-th-list"></span> Задачи: {[ history.issues.length ]}
+                        <a class="btn btn-success btn-xs pull-right" href
+                           ng-click="vm.addIssue(history)"><span class="glyphicon glyphicon-plus"></span> Добавить задачу</a>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="pull-right btn-group btn-group-xs">
+                            <a class="btn btn-warning" href
+                               ng-click="vm.editHistory(history)"><span class="glyphicon glyphicon-pencil"></span></a>
+                            <a class="btn btn-danger" href
+                               ng-click="vm.deleteHistory(history)"><span class="glyphicon glyphicon-minus"></span></a>
+                        </span>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <table class="table table-bordered">
+                    <colgroup>
+                        <col style="width: 25%"/>
+                        <col style="width: 25%"/>
+                        <col style="width: 25%"/>
+                        <col style="width: 25%"/>
+                    </colgroup>
+                    <tbody uib-collapse="vm.collapsed[history.id]">
+                    <tr>
+                        <td ng-repeat="status in vm.statuses" ng-class="status.className"
+                            ng-drop="true" ng-drop-success="vm.onDropSuccess($data, $event, status.id, history)">
+                            <div class="issue panel panel-default"
+                                 ng-repeat="issue in history.issues | filter: {status: status.id}"
+                                 ng-drag="true" ng-drag-data="issue" ng-drag-success="vm.onDragSuccess($data, $event)"
+                                    >
+                                <div class="panel-heading">
+                                    <span>{[ issue.name ]}</span>
+                                <span class="pull-right btn-group btn-group-xs">
+                                    <a class="btn btn-warning" href
+                                       ng-click="vm.editIssue(issue)"><span class="glyphicon glyphicon-pencil"></span></a>
+                                    <a class="btn btn-danger" href
+                                       ng-click="vm.deleteIssue(issue)"><span class="glyphicon glyphicon-minus"></span></a>
+                                </span>
+                                </div>
+                                <div class="panel-body">
+                                    <span class="glyphicon glyphicon-hourglass"></span> Время: {[ issue.timing ]}
+                                    <br/>
+                                    <span class="glyphicon glyphicon-warning-sign"></span> Приоритет: {[ issue.priority ]}
+                                    <br/>
+                                    <span class="glyphicon glyphicon-asterisk"></span> Статус: {[ vm.statuses[issue.status].name ]}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+Flask
+Flask-Restless
+Flask-Migrate
+Flask-Script
+SqlAlchemy
+Flask-SqlAlchemy
